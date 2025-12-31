@@ -1,0 +1,325 @@
+openapi: 3.0.0
+info:
+  title: Task Manager API
+  version: "1.0.0"
+  description: >
+    Simple Task Manager microservice API. Provides CRUD operations for to-do tasks.
+    This OpenAPI spec is intended to be served from the application at `/docs/openapi.yaml`
+    and the API base path is `/api/v1`.
+  contact:
+    name: Task Manager Team
+    email: dev@example.com
+servers:
+  - url: /api/v1
+    description: Local API server (mounted at /api/v1)
+tags:
+  - name: tasks
+    description: Operations on tasks (create, list, get, update, delete)
+paths:
+  /tasks:
+    post:
+      tags:
+        - tasks
+      summary: Create a new task
+      description: Create a new to-do task. Title is required. Optional `assignee` can be set.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskRequest"
+            examples:
+              basic:
+                summary: Minimal create
+                value:
+                  title: "Buy groceries"
+                  description: "Milk, eggs, bread"
+      responses:
+        "201":
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      tags:
+        - tasks
+      summary: List tasks
+      description: Retrieve a paginated list of tasks. Supports optional filters by completion status and assignee.
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+        - $ref: "#/components/parameters/completed"
+        - $ref: "#/components/parameters/assignee"
+      responses:
+        "200":
+          description: A list of tasks (paginated). Response may include header `X-Total-Count` with total matching items.
+          headers:
+            X-Total-Count:
+              description: Total number of items matching the query (useful for pagination)
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+        "400":
+          description: Invalid query
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /tasks/{id}:
+    parameters:
+      - name: id
+        in: path
+        description: UUID of the task
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags:
+        - tasks
+      summary: Get a task by ID
+      responses:
+        "200":
+          description: The task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "404":
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      tags:
+        - tasks
+      summary: Update a task (partial)
+      description: Update one or more fields of a task. Only provided fields will be updated. Use empty string for `assignee` to clear it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskRequest"
+            examples:
+              update:
+                summary: Mark completed and change title and assignee
+                value:
+                  title: "Buy groceries and snacks"
+                  completed: true
+                  assignee: "alice"
+      responses:
+        "200":
+          description: Updated task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags:
+        - tasks
+      summary: Delete a task
+      description: Deletes a task by id. Cache/list invalidation is performed by the service when available.
+      responses:
+        "204":
+          description: Task deleted (no content)
+        "404":
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  parameters:
+    limit:
+      name: limit
+      in: query
+      description: Maximum number of items to return (page size)
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 100
+        minimum: 1
+        maximum: 1000
+    offset:
+      name: offset
+      in: query
+      description: Number of items to skip (for pagination)
+      required: false
+      schema:
+        type: integer
+        format: int32
+        default: 0
+        minimum: 0
+    completed:
+      name: completed
+      in: query
+      description: Filter by completion status (true/false). If omitted, returns all.
+      required: false
+      schema:
+        type: boolean
+    assignee:
+      name: assignee
+      in: query
+      description: Filter tasks by assignee (exact match). To clear assignee in update, provide empty string in request body.
+      required: false
+      schema:
+        type: string
+        nullable: true
+  schemas:
+    Task:
+      type: object
+      required:
+        - id
+        - title
+        - completed
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        title:
+          type: string
+          example: "Buy groceries"
+        description:
+          type: string
+          nullable: true
+          example: "Milk, eggs, bread"
+        assignee:
+          type: string
+          nullable: true
+          example: "alice"
+          description: "Optional username or identifier of the person the task is assigned to"
+        completed:
+          type: boolean
+          example: false
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2025-01-31T15:04:05Z"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-01T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-01-02T12:00:00Z"
+    CreateTaskRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          example: "Buy groceries"
+        description:
+          type: string
+          nullable: true
+          example: "Milk, eggs, bread"
+        assignee:
+          type: string
+          nullable: true
+          example: "alice"
+          description: "Optional assignee for the task"
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2025-01-31T15:04:05Z"
+    UpdateTaskRequest:
+      type: object
+      description: Partial update object. Only provided fields are updated. Provide empty string for `assignee` to clear value.
+      properties:
+        title:
+          type: string
+          example: "Buy groceries and snacks"
+        description:
+          type: string
+          nullable: true
+          example: "Also get chips"
+        assignee:
+          type: string
+          nullable: true
+          example: "bob"
+          description: "Set or clear assignee. To clear set an empty string."
+        completed:
+          type: boolean
+          example: true
+        due_date:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2025-02-01T12:00:00Z"
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "task not found"
+
+externalDocs:
+  description: README / usage notes
+  url: /README.md
