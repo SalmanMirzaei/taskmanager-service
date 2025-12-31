@@ -1,3 +1,4 @@
+<div dir="rtl">
 # Task Manager Microservice
 
 این مخزن یک میکروسرویس ساده برای مدیریت تسک‌ها (to-do tasks) است که:
@@ -124,3 +125,4 @@ Trade-offs و نکات:
 - authentication/authorization حذف شده تا MVP سبک و سریع آماده شود. می‌توان آن را با JWT یا OAuth اضافه کرد.
 
 ---
+</div>
