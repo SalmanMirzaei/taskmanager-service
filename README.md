@@ -14,27 +14,32 @@
 ## نکات سریع (Quickstart)
 
 1) با Docker Compose اجرا کن:
+```graph-project/README.md#L1-20
 docker-compose up --build
+```
 
 - سرویس اپ روی `http://localhost:8080` و دیتابیس PostgreSQL روی پورت `5432` (local) در دسترس است.
 - OpenAPI spec به صورت استاتیک در `http://localhost:8080/docs/openapi.yaml` سرو می‌شود.
 - متریک‌های Prometheus در `http://localhost:8080/metrics` در دسترس‌اند.
 
 2) نمونهٔ ایجاد یک تسک (curl):
+```graph-project/README.md#L21-40
 curl -X POST http://localhost:8080/api/v1/tasks \
   -H "Content-Type: application/json" \
   -d '{"title":"Buy groceries","description":"Milk and eggs"}'
+```
 
 3) لیست تسک‌ها:
+```graph-project/README.md#L41-60
 curl http://localhost:8080/api/v1/tasks
-
+```
 
 4) گرفتن یک تسک:
+```graph-project/README.md#L61-80
 curl http://localhost:8080/api/v1/tasks/<TASK_ID>
-
+```
 
 ---
-
 
 ## تست‌ها
 
@@ -42,22 +47,30 @@ curl http://localhost:8080/api/v1/tasks/<TASK_ID>
 - برای unit tests از mocking (مثلاً `sqlmock`) استفاده شده و برای integration tests می‌توان از دیتابیس واقعی (مثلاً با `docker-compose up db`) استفاده کرد.
 
 اجرای تمام تست‌ها:
+```graph-project/README.md#L121-140
 go test ./...
+```
 
 اجرای تنها تست‌های integration (اگر جدا کنید با build tags):
+```graph-project/README.md#L141-160
 # مثال اگر از tag استفاده شده باشد:
 go test -tags=integration ./...
+```
 
 - هدف پوشش تستی: حداقل 70% (unit + integration). برای گزارش پوشش:
+```graph-project/README.md#L161-180
 go test ./... -coverprofile=coverage.out
 go tool cover -html=coverage.out
+```
 
 ---
 
 ## مستندات API
 
 فایل OpenAPI در `docs/openapi.yaml` قرار دارد. می‌توانی آن را در Swagger UI بارگذاری کنی یا مستقیم از آدرس زیر درخواست بدهی:
+```graph-project/README.md#L181-200
 http://localhost:8080/docs/openapi.yaml
+```
 
 مسیرهای اصلی API:
 - `POST /api/v1/tasks` — ایجاد تسک
