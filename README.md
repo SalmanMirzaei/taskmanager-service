@@ -1,4 +1,4 @@
-<div dir="rtl" lang="fa" style="direction: rtl; text-align: right; unicode-bidi: embed; list-style-position: inside;">
+<div dir="rtl">
 
 # Task Manager Microservice
 
